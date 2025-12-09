@@ -88,24 +88,3 @@ def create_zip_zipfile(source_folder, output_zip):
     
     print(f"Архив создан: {output_zip}")
     return True
-
-if __name__ == "__main__":
-
-    sender_email = "mokaiv118@gmail.com"
-    sender_password = "xxxx xxxx xxxx"  # пароль приложения
-    recipient_email = "mokaiv118@gmail.com"
-    subject = "5 секунд"
-    message = "Привет! Это письмо содержит файл с 5ю секундами."
-    create_zip_zipfile("data_collection", "data_collection.zip")
-    
-    print("Пример 1: Отправка письма с одним вложением")
-    file_path = "data_collection.zip"  
-    
-    send_gmail_with_attachment(
-        sender_email=sender_email,
-        sender_password=sender_password,
-        recipient_email=recipient_email,
-        subject=subject,
-        message=message,
-        attachment_path=file_path
-    )
