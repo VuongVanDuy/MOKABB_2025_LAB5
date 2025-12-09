@@ -1,94 +1,111 @@
-import os
-import zipfile
 import smtplib
-from email.message import EmailMessage
+import os
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+import zipfile
 from pathlib import Path
 
-
-class MailZipClient:
-    """
-    Классы используются для:
-    - Сожмите папку в ZIP-файл.
-    - Отправка письма по SMTP (в теме — команда, в теле — текст)
-    - Читайте электронные письма через IMAP, получайте тему/текст/вложения.
-
-    Пример темы содержит команду: "RUN_BACKUP"
-    В теле письмах — полезная информация.
-    """
-
-    def __init__(
-        self,
-        smtp_server: str,
-        smtp_port: int,
-        username: str,
-        password: str,
-        default_from: str | None = None,
-    ):
-        self.smtp_server = smtp_server
-        self.smtp_port = smtp_port
-        self.username = username
-        self.password = password
-        self.default_from = default_from or username
-
-    def zip_folder(self, folder_path: str, zip_path: str) -> str:
-        """
-        Сжать весь путь к папке в файл zip_path.
-        Возвращает путь к zip-файлу.
-        """
-        folder_path = os.path.abspath(folder_path)
-        zip_path = os.path.abspath(zip_path)
-
-        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for root, dirs, files in os.walk(folder_path):
-                for file in files:
-                    abs_path = os.path.join(root, file)
-                    rel_path = os.path.relpath(abs_path, start=folder_path)
-                    zipf.write(abs_path, arcname=rel_path)
-
-        return zip_path
-
-    def send_email_with_attachment(
-        self,
-        to_addrs: list[str],
-        subject: str,
-        body: str,
-        attachment_paths: list[str] | None = None,
-        from_addr: str | None = None,
-    ):
-        """
-        Отправка электронной почты через SMTP.
-        В теме письма — команда.
-        В теле — полезная информация.
-        Вложения — пути_вложений.
-        """
-        msg = EmailMessage()
-        msg["From"] = from_addr or self.default_from
-        msg["To"] = ", ".join(to_addrs)
-        msg["Subject"] = subject
-        msg.set_content(body)
-
-        attachment_paths = attachment_paths or []
-        for path in attachment_paths:
-            file_path = Path(path)
-            if not file_path.is_file():
-                print(f"Файл вложения не найден: {file_path}")
-                continue
-
-            with open(file_path, "rb") as f:
-                file_data = f.read()
-
-            # đơn giản: luôn dùng octet-stream
-            msg.add_attachment(
-                file_data,
-                maintype="application",
-                subtype="octet-stream",
-                filename=file_path.name,
+def send_gmail_with_attachment(sender_email, sender_password, recipient_email, subject, message, attachment_path=None):
+    
+    try:
+        # Создаем сообщение
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        
+        # Добавляем текст письма
+        msg.attach(MIMEText(message, 'plain'))
+        
+        # Прикрепляем файл, если указан путь
+        if attachment_path:
+            if not os.path.exists(attachment_path):
+                print(f"Ошибка: файл {attachment_path} не найден")
+                return False
+            
+            # Открываем файл в бинарном режиме
+            with open(attachment_path, 'rb') as attachment:
+                # Создаем объект MIMEBase
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(attachment.read())
+            
+            # Кодируем файл в base64
+            encoders.encode_base64(part)
+            
+            # Получаем имя файла из пути
+            filename = os.path.basename(attachment_path)
+            
+            # Добавляем заголовки для вложения
+            part.add_header(
+                'Content-Disposition',
+                f'attachment; filename= {filename}',
             )
+            
+            # Прикрепляем файл к сообщению
+            msg.attach(part)
+            print(f"Файл {filename} прикреплен к письму")
+        
+        # Подключаемся к серверу Gmail
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()  # Включаем шифрование
+        
+        # Логинимся
+        server.login(sender_email, sender_password)
+        
+        # Отправляем письмо
+        server.send_message(msg)
+        
+        # Закрываем соединение
+        server.quit()
+        
+        print("Письмо успешно отправлено!")
+        return True
+        
+    except smtplib.SMTPAuthenticationError:
+        print("Ошибка аутентификации. Проверьте email и пароль приложения.")
+        return False
+    except smtplib.SMTPException as e:
+        print(f"Ошибка SMTP: {e}")
+        return False
+    except FileNotFoundError as e:
+        print(f"Файл не найден: {e}")
+        return False
+    except Exception as e:
+        print(f"Ошибка при отправке письма: {e}")
+        return False
 
-        with smtplib.SMTP_SSL(self.smtp_server, 25) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(self.username, self.password)
-            server.send_message(msg)
-            print("Письмо отправлено.")
+def create_zip_zipfile(source_folder, output_zip):
+    source_path = Path(source_folder)
+    
+    with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(source_folder):
+            for file in files:
+                file_path = Path(root) / file
+                arcname = file_path.relative_to(source_path.parent)
+                zipf.write(file_path, arcname)
+    
+    print(f"Архив создан: {output_zip}")
+    return True
+
+if __name__ == "__main__":
+
+    sender_email = "mokaiv118@gmail.com"
+    sender_password = "xxxx xxxx xxxx"  # пароль приложения
+    recipient_email = "mokaiv118@gmail.com"
+    subject = "5 секунд"
+    message = "Привет! Это письмо содержит файл с 5ю секундами."
+    create_zip_zipfile("data_collection", "data_collection.zip")
+    
+    print("Пример 1: Отправка письма с одним вложением")
+    file_path = "data_collection.zip"  
+    
+    send_gmail_with_attachment(
+        sender_email=sender_email,
+        sender_password=sender_password,
+        recipient_email=recipient_email,
+        subject=subject,
+        message=message,
+        attachment_path=file_path
+    )
