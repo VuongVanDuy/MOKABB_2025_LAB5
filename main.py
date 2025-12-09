@@ -690,7 +690,7 @@ def main():
         collector.start_monitoring()
 
         sender_email = "mokaiv118@gmail.com"
-        sender_password = "pxzr wjsc ledt jnpi"  # пароль приложения
+        sender_password = "xxx"  # пароль приложения
         recipient_email = "mokaiv118@gmail.com"
         subject = "5 секунд"
         message = "Привет! Это письмо содержит архив 5ти секунд."
