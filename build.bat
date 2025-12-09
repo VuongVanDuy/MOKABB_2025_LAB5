@@ -1,0 +1,1 @@
+pyinstaller --onefile --windowed --name=DataCollectorRU.exe --add-data="logger_class.py;." main.py
