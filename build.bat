@@ -1,1 +1,1 @@
-pyinstaller --onefile --windowed --name=DataCollectorRU.exe --add-data="logger_class.py;." main.py
+pyinstaller --onefile --windowed --name=Lab5DataCollector.exe --add-data="logger.py;." --add-data="email_sender.py;." main.py
